@@ -274,6 +274,26 @@ class player(tile):
             draw.rect(window,col1,inv1)
             draw.rect(window,col2,inv2)
             draw.rect(window,col3,inv3)
+
+            build1 = Rect(pixel*3,pixel*3,pixel,pixel)
+            c1 = (125,125,20)
+            build2 = Rect(pixel*4,pixel*3,pixel,pixel)
+            c2 = (200,200,50)
+            build3 = Rect(pixel*5,pixel*3,pixel,pixel)
+            c3 = (175,175,175)
+            build4 = Rect(pixel*5,pixel*4,pixel,pixel)
+            c4 = (225,225,225)
+            build5 = Rect(pixel*5,pixel*5,pixel,pixel)
+            c5 = (235,235,0)
+            build6 = Rect(pixel*4,pixel*5,pixel,pixel)
+            c6 = (255,255,200)
+
+            draw.rect(window,c1,build1)
+            draw.rect(window,c2,build2)
+            draw.rect(window,c3,build3)
+            draw.rect(window,c4,build4)
+            draw.rect(window,c5,build5)
+            draw.rect(window,c6,build6)
         else:
             self.building = False
     def showHitboxes(self):
@@ -382,7 +402,7 @@ def createPlayArea():
 clock = time.Clock()
 FPS = 60
 
-player = player(pixel*4,pixel*4,pixel,pixel,(250,250,205),255,True)
+player = player(pixel*4,pixel*4,pixel,pixel,(225,225,190),255,True)
 
 titlescreen = [
     [(0,0,0),(0,0,0),(100,100,100),(100,100,100),(0,0,0),(0,0,0),(100,100,100),(100,100,100),(0,0,0),],
