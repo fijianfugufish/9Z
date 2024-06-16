@@ -41,30 +41,57 @@ because i made the controls pretty difficult
 
 ## blocks
 - Mountain
+  
   You cannot pass through, destroy or interact with this block. They border the world. Think of it like bedrock from Minecraft.
+  
 - Water
+  
   Same as mountains, but blue.
+  
 - Grass
+  
   The green stuff on the ground. You may build on this block.
+  
 - Raw Wood
+  
   This is a naturally occuring mineral that you can break to get Wood. The amount of Wood you have is displayed in your inventory.
+  
 - Raw Stone
+  
   This is a naturally occuring mineral that you can break to get Stone. The amount of Stone you have is displayed in your inventory.
+  
 - Raw Diamond
+  
   This is a naturally occuring mineral that you can break to get Diamond. The amount of Diamond you have is displayed in your inventory.
+  
 - Wooden Wall
+  
   This is a structure you can build with Wood. Has 100 health, costs 2 Wood. To build this structure, you must hold 1 while pressing B.
+  
 - Wooden Half Wall
+  
   This is a structure you can build with Wood. Has 50 health, costs 1 Wood. This allows bullets to pass through. To build this structure, you must hold 2 while pressing B.
+  
 - Stone Wall
+  
   This is a structure you can build with Stone. Has 200 health, costs 2 Stone. To build this structure, you must hold 3 while pressing B.
+  
 - Stone Half Wall
+  
   This is a structure you can build with Stone. Has 100 health, costs 1 Stone. This allows bullets to pass through. To build this structure, you must hold 4 while pressing B.
+  
 - Diamond Wall
+  
   This is a structure you can build with Diamond. Has 300 health, costs 2 Diamond. To build this structure, you must hold 5 while pressing B.
+  
 - Diamond Half Wall
+  
   This is a structure you can build with Diamond. Has 150 health, costs 1 Diamond. This allows bullets to pass through. To build this structure, you must hold 6 while pressing B.
+  
 - Stone Trap
+  
   This is a structure you can build with Stone. Has 150 health, costs 3 Stone. Damages ememies above it. This block is not solid. To build this structure, you must hold 7 while pressing B.
+  
 - Diamond Trap
+  
   This is a structure you can build with Diamond. Has 225 health, costs 3 Diamond. Damages ememies above it. This block is not solid. To build this structure, you must hold 8 while pressing B.
