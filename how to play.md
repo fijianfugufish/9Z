@@ -1,1 +1,2 @@
-# how to play
+# HOW TO PLAY
+
