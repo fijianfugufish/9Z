@@ -20,10 +20,14 @@ display.set_caption('9Z')
 tiles = []
 solids = []
 breakables = []
+structures = []
+shootable = []
+grasses = []
+traps = []
 
 woodnum = 0
 stonenum = 0
-goldnum = 0
+diamondnum = 0
 
 class tile(sprite.Sprite):
     def __init__(self,X,Y,w,h,col,trans,remove=False):
@@ -76,12 +80,59 @@ class wood(tile):
             breakables.remove(self)
             self.ogcolour = (randint(0,50),randint(150,255),randint(0,100))
             self.colour = self.ogcolour
+            grasses.append(self)
         else:
             qwey = list(self.ogcolour)
             for i in range(len(qwey)): 
                 qwey[i] *= self.health/100
             self.colour = tuple(qwey)
-            
+
+class woodWall(tile):
+    def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        structures.append(self)
+        solids.append(self)
+        breakables.append(self)
+        self.health = 100
+        self.parent = parent
+        grasses.remove(self.parent)
+    def displayHealth(self):
+        if self.health <= 0:
+            breakables.remove(self)
+            tiles.remove(self)
+            solids.remove(self)
+            structures.remove(self)
+            grasses.append(self.parent)
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/100
+            self.colour = tuple(qwey)
+
+class woodHalfWall(tile):
+    def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        structures.append(self)
+        solids.append(self)
+        shootable.append(self)
+        breakables.append(self)
+        self.health = 50
+        self.parent = parent
+        grasses.remove(self.parent)
+    def displayHealth(self):
+        if self.health <= 0:
+            breakables.remove(self)
+            tiles.remove(self)
+            solids.remove(self)
+            structures.remove(self)
+            shootable.remove(self)
+            grasses.append(self.parent)
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/50
+            self.colour = tuple(qwey)
+
 class stone(tile):
     def __init__(self,X,Y,w,h,col,trans,remove=False):
         super().__init__(X,Y,w,h,col,trans,remove)
@@ -94,30 +145,168 @@ class stone(tile):
             breakables.remove(self)
             self.ogcolour = (randint(0,50),randint(150,255),randint(0,100))
             self.colour = self.ogcolour
+            grasses.append(self)
         else:
             qwey = list(self.ogcolour)
             for i in range(len(qwey)): 
                 qwey[i] *= self.health/200
             self.colour = tuple(qwey)
-            
-class gold(tile):
+
+class stoneWall(tile):
+    def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        structures.append(self)
+        solids.append(self)
+        breakables.append(self)
+        self.health = 200
+        self.parent = parent
+        grasses.remove(self.parent)
+    def displayHealth(self):
+        if self.health <= 0:
+            breakables.remove(self)
+            tiles.remove(self)
+            solids.remove(self)
+            structures.remove(self)
+            grasses.append(self.parent)
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/200
+            self.colour = tuple(qwey)
+
+class stoneHalfWall(tile):
+    def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        structures.append(self)
+        solids.append(self)
+        shootable.append(self)
+        breakables.append(self)
+        self.health = 100
+        self.parent = parent
+        grasses.remove(self.parent)
+    def displayHealth(self):
+        if self.health <= 0:
+            breakables.remove(self)
+            tiles.remove(self)
+            solids.remove(self)
+            structures.remove(self)
+            shootable.remove(self)
+            grasses.append(self.parent)
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/100
+            self.colour = tuple(qwey)
+
+class stoneTrap(tile):
+    def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        structures.append(self)
+        traps.append(self)
+        breakables.append(self)
+        self.health = 150
+        self.parent = parent
+        grasses.remove(self.parent)
+    def displayHealth(self):
+        if self.health <= 0:
+            breakables.remove(self)
+            tiles.remove(self)
+            solids.remove(self)
+            structures.remove(self)
+            grasses.append(self.parent)
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/150
+            self.colour = tuple(qwey)
+
+class diamond(tile):
     def __init__(self,X,Y,w,h,col,trans,remove=False):
         super().__init__(X,Y,w,h,col,trans,remove)
         breakables.append(self)
         self.health = 300
     def displayHealth(self):
         if self.health <= 0:
-            global goldnum
-            goldnum += 4
+            global diamondnum
+            diamondnum += 4
             breakables.remove(self)
             self.ogcolour = (randint(0,50),randint(150,255),randint(0,100))
             self.colour = self.ogcolour
+            grasses.append(self)
         else:
             qwey = list(self.ogcolour)
             for i in range(len(qwey)): 
                 qwey[i] *= self.health/300
             self.colour = tuple(qwey)
-            
+
+class diamondWall(tile):
+    def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        structures.append(self)
+        solids.append(self)
+        breakables.append(self)
+        self.health = 300
+        self.parent = parent
+        grasses.remove(self.parent)
+    def displayHealth(self):
+        if self.health <= 0:
+            breakables.remove(self)
+            tiles.remove(self)
+            solids.remove(self)
+            structures.remove(self)
+            grasses.append(self.parent)
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/300
+            self.colour = tuple(qwey)
+
+class diamondHalfWall(tile):
+    def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        structures.append(self)
+        solids.append(self)
+        shootable.append(self)
+        breakables.append(self)
+        self.health = 150
+        self.parent = parent
+        grasses.remove(self.parent)
+    def displayHealth(self):
+        if self.health <= 0:
+            breakables.remove(self)
+            tiles.remove(self)
+            solids.remove(self)
+            structures.remove(self)
+            shootable.remove(self)
+            grasses.append(self.parent)
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/150
+            self.colour = tuple(qwey)
+
+class diamondTrap(tile):
+    def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        structures.append(self)
+        traps.append(self)
+        breakables.append(self)
+        self.health = 225
+        self.parent = parent
+        grasses.remove(self.parent)
+    def displayHealth(self):
+        if self.health <= 0:
+            breakables.remove(self)
+            tiles.remove(self)
+            solids.remove(self)
+            structures.remove(self)
+            grasses.append(self.parent)
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/225
+            self.colour = tuple(qwey)
+
 class player(tile):
     def __init__(self,X,Y,w,h,col,trans,remove=False):
         super().__init__(X,Y,w,h,col,trans,remove)
@@ -250,6 +439,10 @@ class player(tile):
         
         if (keysPressed[K_b]):
             self.building = True
+
+            global woodnum
+            global stonenum
+            global diamondnum
             
             inv1 = Rect(0,pixel*8,pixel,pixel)
             inv2 = Rect(pixel,pixel*8,pixel,pixel)
@@ -265,35 +458,450 @@ class player(tile):
                 if stonenum < 10:
                     col2t[i] *= stonenum/12
             col2 = tuple(col2t)
-            col3t = list((255,255,0))
+            col3t = list((0,200,255))
             for i in range(len(col3t)):
-                if goldnum < 10:
-                    col3t[i] *= goldnum/12
+                if diamondnum < 10:
+                    col3t[i] *= diamondnum/12
             col3 = tuple(col3t)
             
             draw.rect(window,col1,inv1)
             draw.rect(window,col2,inv2)
             draw.rect(window,col3,inv3)
-
+            
             build1 = Rect(pixel*3,pixel*3,pixel,pixel)
-            c1 = (125,125,20)
+            c1 = (0,0,0)
+            if woodnum >= 2:
+                c1 = (125,125,20)
             build2 = Rect(pixel*4,pixel*3,pixel,pixel)
-            c2 = (200,200,50)
+            c2 = (0,0,0)
+            if woodnum >= 1:
+                c2 = (200,200,50)
             build3 = Rect(pixel*5,pixel*3,pixel,pixel)
-            c3 = (175,175,175)
+            c3 = (0,0,0)
+            if stonenum >= 2:
+                c3 = (175,175,175)
             build4 = Rect(pixel*5,pixel*4,pixel,pixel)
-            c4 = (225,225,225)
+            c4 = (0,0,0)
+            if stonenum >= 1:
+                c4 = (225,225,225)
             build5 = Rect(pixel*5,pixel*5,pixel,pixel)
-            c5 = (235,235,0)
+            c5 = (0,0,0)
+            if diamondnum >= 2:
+                c5 = (100,150,255)
             build6 = Rect(pixel*4,pixel*5,pixel,pixel)
-            c6 = (255,255,200)
+            c6 = (0,0,0)
+            if diamondnum >= 1:
+                c6 = (0,255,255)
+            build7 = Rect(pixel*3,pixel*5,pixel,pixel)
+            c7 = (0,0,0)
+            if stonenum >= 3:
+                c7 = (225,90,0)
+            build8 = Rect(pixel*3,pixel*4,pixel,pixel)
+            c8 = (0,0,0)
+            if diamondnum >= 3:
+                c8 = (160,0,255)
 
-            draw.rect(window,c1,build1)
-            draw.rect(window,c2,build2)
-            draw.rect(window,c3,build3)
-            draw.rect(window,c4,build4)
-            draw.rect(window,c5,build5)
-            draw.rect(window,c6,build6)
+            if (keysPressed[K_1]) and c1 != (0,0,0):
+                draw.rect(window,c1,build2)
+                draw.rect(window,c1,build4)
+                draw.rect(window,c1,build6)
+                draw.rect(window,c1,build8)
+                if (keysPressed[K_w]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*3 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = woodWall(pixel*4,pixel*3,pixel,pixel,c1,255,parentTile)
+                        woodnum -= 2
+                elif (keysPressed[K_a]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*3 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = woodWall(pixel*3,pixel*4,pixel,pixel,c1,255,parentTile)
+                        woodnum -= 2
+                elif (keysPressed[K_d]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*5 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = woodWall(pixel*5,pixel*4,pixel,pixel,c1,255,parentTile)
+                        woodnum -= 2
+                elif (keysPressed[K_s]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*5 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = woodWall(pixel*4,pixel*5,pixel,pixel,c1,255,parentTile)
+                        woodnum -= 2
+            elif (keysPressed[K_2]) and c2 != (0,0,0):
+                draw.rect(window,c2,build2)
+                draw.rect(window,c2,build4)
+                draw.rect(window,c2,build6)
+                draw.rect(window,c2,build8)
+                if (keysPressed[K_w]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*3 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = woodHalfWall(pixel*4,pixel*3,pixel,pixel,c2,255,parentTile)
+                        woodnum -= 1
+                elif (keysPressed[K_a]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*3 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = woodHalfWall(pixel*3,pixel*4,pixel,pixel,c2,255,parentTile)
+                        woodnum -= 1
+                elif (keysPressed[K_d]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*5 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = woodHalfWall(pixel*5,pixel*4,pixel,pixel,c2,255,parentTile)
+                        woodnum -= 1
+                elif (keysPressed[K_s]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*5 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = woodHalfWall(pixel*4,pixel*5,pixel,pixel,c2,255,parentTile)
+                        woodnum -= 1
+            elif (keysPressed[K_3]) and c3 != (0,0,0):
+                draw.rect(window,c3,build2)
+                draw.rect(window,c3,build4)
+                draw.rect(window,c3,build6)
+                draw.rect(window,c3,build8)
+                if (keysPressed[K_w]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*3 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneWall(pixel*4,pixel*3,pixel,pixel,c3,255,parentTile)
+                        stonenum -= 2
+                elif (keysPressed[K_a]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*3 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneWall(pixel*3,pixel*4,pixel,pixel,c3,255,parentTile)
+                        stonenum -= 2
+                elif (keysPressed[K_d]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*5 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneWall(pixel*5,pixel*4,pixel,pixel,c3,255,parentTile)
+                        stonenum -= 2
+                elif (keysPressed[K_s]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*5 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneWall(pixel*4,pixel*5,pixel,pixel,c3,255,parentTile)
+                        stonenum -= 2
+            elif (keysPressed[K_4]) and c4 != (0,0,0):
+                draw.rect(window,c4,build2)
+                draw.rect(window,c4,build4)
+                draw.rect(window,c4,build6)
+                draw.rect(window,c4,build8)
+                if (keysPressed[K_w]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*3 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneHalfWall(pixel*4,pixel*3,pixel,pixel,c4,255,parentTile)
+                        stonenum -= 1
+                elif (keysPressed[K_a]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*3 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneHalfWall(pixel*3,pixel*4,pixel,pixel,c4,255,parentTile)
+                        stonenum -= 1
+                elif (keysPressed[K_d]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*5 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneHalfWall(pixel*5,pixel*4,pixel,pixel,c4,255,parentTile)
+                        stonenum -= 1
+                elif (keysPressed[K_s]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*5 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneHalfWall(pixel*4,pixel*5,pixel,pixel,c4,255,parentTile)
+                        stonenum -= 1
+            elif (keysPressed[K_5]) and c5 != (0,0,0):
+                draw.rect(window,c5,build2)
+                draw.rect(window,c5,build4)
+                draw.rect(window,c5,build6)
+                draw.rect(window,c5,build8)
+                if (keysPressed[K_w]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*3 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondWall(pixel*4,pixel*3,pixel,pixel,c5,255,parentTile)
+                        diamondnum -= 2
+                elif (keysPressed[K_a]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*3 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondWall(pixel*3,pixel*4,pixel,pixel,c5,255,parentTile)
+                        diamondnum -= 2
+                elif (keysPressed[K_d]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*5 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondWall(pixel*5,pixel*4,pixel,pixel,c5,255,parentTile)
+                        diamondnum -= 2
+                elif (keysPressed[K_s]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*5 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondWall(pixel*4,pixel*5,pixel,pixel,c5,255,parentTile)
+                        diamondnum -= 2
+            elif (keysPressed[K_6]) and c6 != (0,0,0):
+                draw.rect(window,c6,build2)
+                draw.rect(window,c6,build4)
+                draw.rect(window,c6,build6)
+                draw.rect(window,c6,build8)
+                if (keysPressed[K_w]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*3 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondHalfWall(pixel*4,pixel*3,pixel,pixel,c6,255,parentTile)
+                        diamondnum -= 1
+                elif (keysPressed[K_a]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*3 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondHalfWall(pixel*3,pixel*4,pixel,pixel,c6,255,parentTile)
+                        diamondnum -= 1
+                elif (keysPressed[K_d]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*5 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondHalfWall(pixel*5,pixel*4,pixel,pixel,c6,255,parentTile)
+                        diamondnum -= 1
+                elif (keysPressed[K_s]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*5 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondHalfWall(pixel*4,pixel*5,pixel,pixel,c6,255,parentTile)
+                        diamondnum -= 1
+            elif (keysPressed[K_7]) and c7 != (0,0,0):
+                draw.rect(window,c7,build2)
+                draw.rect(window,c7,build4)
+                draw.rect(window,c7,build6)
+                draw.rect(window,c7,build8)
+                if (keysPressed[K_w]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*3 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneTrap(pixel*4,pixel*3,pixel,pixel,c7,255,parentTile)
+                        stonenum -= 3
+                elif (keysPressed[K_a]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*3 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneTrap(pixel*3,pixel*4,pixel,pixel,c7,255,parentTile)
+                        stonenum -= 3
+                elif (keysPressed[K_d]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*5 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneTrap(pixel*5,pixel*4,pixel,pixel,c7,255,parentTile)
+                        stonenum -= 3
+                elif (keysPressed[K_s]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*5 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = stoneTrap(pixel*4,pixel*5,pixel,pixel,c7,255,parentTile)
+                        stonenum -= 3
+            elif (keysPressed[K_8]) and c8 != (0,0,0):
+                draw.rect(window,c8,build2)
+                draw.rect(window,c8,build4)
+                draw.rect(window,c8,build6)
+                draw.rect(window,c8,build8)
+                if (keysPressed[K_w]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*3 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondTrap(pixel*4,pixel*3,pixel,pixel,c8,255,parentTile)
+                        diamondnum -= 3
+                elif (keysPressed[K_a]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*3 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondTrap(pixel*3,pixel*4,pixel,pixel,c8,255,parentTile)
+                        diamondnum -= 3
+                elif (keysPressed[K_d]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*5 and i.y == pixel*4 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondTrap(pixel*5,pixel*4,pixel,pixel,c8,255,parentTile)
+                        diamondnum -= 3
+                elif (keysPressed[K_s]):
+                    canplace = False
+                    parentTile = None
+                    for i in tiles:
+                        if i.x == pixel*4 and i.y == pixel*5 and i in grasses:
+                            canplace = True
+                            parentTile = i
+                            break
+                    if canplace:
+                        struct = diamondTrap(pixel*4,pixel*5,pixel,pixel,c8,255,parentTile)
+                        diamondnum -= 3
+            else:
+                draw.rect(window,c1,build1)
+                draw.rect(window,c2,build2)
+                draw.rect(window,c3,build3)
+                draw.rect(window,c4,build4)
+                draw.rect(window,c5,build5)
+                draw.rect(window,c6,build6)
+                draw.rect(window,c7,build7)
+                draw.rect(window,c8,build8)
         else:
             self.building = False
     def showHitboxes(self):
@@ -314,13 +922,14 @@ def decodeMatrix(matrix):
                         pix = wood(pixel*(j-(len(matrix[i])//2)),pixel*(i-(len(matrix)//2)),pixel,pixel,matrix[i][j],255,False)
                     elif matrix[i][j] == (100,100,100):
                         pix = stone(pixel*(j-(len(matrix[i])//2)),pixel*(i-(len(matrix)//2)),pixel,pixel,matrix[i][j],255,False)
-                    elif matrix[i][j] == (255,255,0):
-                        pix = gold(pixel*(j-(len(matrix[i])//2)),pixel*(i-(len(matrix)//2)),pixel,pixel,matrix[i][j],255,False)
+                    elif matrix[i][j] == (0,200,255):
+                        pix = diamond(pixel*(j-(len(matrix[i])//2)),pixel*(i-(len(matrix)//2)),pixel,pixel,matrix[i][j],255,False)
                     else:
                         pix = tile(pixel*(j-(len(matrix[i])//2)),pixel*(i-(len(matrix)//2)),pixel,pixel,matrix[i][j],255)
                 else:
                     if matrix[len(matrix)-1] == 'green':
                         pix = tile(pixel*(j-(len(matrix[i])//2)),pixel*(i-(len(matrix)//2)),pixel,pixel,(randint(0,50),randint(150,255),randint(0,100)),255)
+                        grasses.append(pix)
                     elif matrix[len(matrix)-1] == 'grey':
                         pix = tile(pixel*(j-(len(matrix[i])//2)),pixel*(i-(len(matrix)//2)),pixel,pixel,(randint(40,50),randint(40,50),randint(40,50)),255)
             else:
@@ -370,7 +979,7 @@ def generateResources(matrix,amount):
                 elif yo < 85:
                     matrix[y][x] = (100,100,100)
                 else:
-                    matrix[y][x] = (255,255,0)
+                    matrix[y][x] = (0,200,255)
         except:
             pass
 
@@ -386,6 +995,7 @@ def clearMiddle():
                 solids.remove(i)
             except:
                 pass
+            grasses.append(i)
             
 def createPlayArea():
     global gameEmpty
@@ -444,6 +1054,9 @@ while game:
         i.displayHealth()
     
     for i in tiles:
+        i.draw()
+
+    for i in structures:
         i.draw()
     
     if state == 'playing':
