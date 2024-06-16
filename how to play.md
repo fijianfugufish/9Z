@@ -3,6 +3,23 @@ because i made the controls pretty difficult
 
 --------------------------------------------------------------------------------------------------------
 
+## main menu
+<img width="893" alt="Screenshot 2024-06-16 at 17 22 19" src="https://github.com/fijianfugufish/9Z/assets/166637966/d85c4fa3-645a-45bc-8bb1-ed13d618f553">
+
+- The top two rows display the title, 9Z, in morse code (pretty clever)
+- The yellow button is to start the game
+- The blue button is to see how to play
+
+- The red button allows you to switch difficulties
+- The square in the bottom right displays which difficulty you are currently on
+
+<img width="872" alt="Screenshot 2024-06-16 at 17 25 15" src="https://github.com/fijianfugufish/9Z/assets/166637966/0a4a1b19-a2ca-4632-9f80-48ecd8a840c7">
+
+- The green button selects the easy difficulty
+- The yellow button selects the medium difficulty
+- The red button selects the hard difficulty
+- The purple button selects the extreme difficulty
+
 ## easy controls
 - WASD to move
 
