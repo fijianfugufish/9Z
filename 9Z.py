@@ -1,6 +1,7 @@
 from pygame import *
 from random import randint
 import numpy
+import webbrowser
 
 winx = 900
 winy = 900
@@ -1081,6 +1082,8 @@ while game:
                 if (x > (pixel)*3 and y > (pixel)*5) and (x < (pixel)*6 and y < (pixel)*6):
                     decodeMatrix(difficulties)
                     state = 'difficulties'
+                if (x > (pixel)*3 and y > (pixel)*7) and (x < (pixel)*6 and y < (pixel)*8):
+                    webbrowser.open('https://github.com/fijianfugufish/9Z/blob/main/how%20to%20play.md')
         elif state == 'difficulties':
             if e.type == MOUSEBUTTONDOWN:
                 x,y = mouse.get_pos()
