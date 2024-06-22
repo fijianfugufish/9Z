@@ -1,7 +1,19 @@
 from pygame import *
 from random import randint
+from time import sleep as wait
+from math import ceil
 import numpy
 import webbrowser
+import json
+
+save = dict()
+with open('save.json',encoding='utf-8') as data:
+    save = json.load(data)
+    data.close()
+    
+def saveData():
+    with open('save.json','w',encoding='utf-8') as file:
+        json.dump(save,file)
 
 winx = 900
 winy = 900
@@ -9,11 +21,24 @@ winy = 900
 pixel = winx/9
 
 difficulty = 'easy'
+rest = 60
+wavelength = 40
+exp = 1
+intervals = 0
 
 counter = 0
+gametime = 0
 
 state = 'title'
+gamestate = 'resting'
 game = True
+
+mixer.init()
+soundClick = mixer.Sound('sounds/click.wav')
+soundPlay = mixer.Sound('sounds/play.wav')
+soundHit = mixer.Sound('sounds/hit.wav')
+soundPlace = mixer.Sound('sounds/place.wav')
+soundShoot = mixer.Sound('sounds/shoot.wav')
 
 window = display.set_mode((winx,winy))
 display.set_caption('9Z')
@@ -25,10 +50,17 @@ structures = []
 shootable = []
 grasses = []
 traps = []
+zombies = []
+bullets = []
+walls = []
+
+transitions = list()
 
 woodnum = 0
 stonenum = 0
 diamondnum = 0
+
+wave = 1
 
 class tile(sprite.Sprite):
     def __init__(self,X,Y,w,h,col,trans,remove=False):
@@ -93,6 +125,7 @@ class woodWall(tile):
         super().__init__(X,Y,w,h,col,trans,remove)
         structures.append(self)
         solids.append(self)
+        walls.append(self)
         breakables.append(self)
         self.health = 100
         self.parent = parent
@@ -109,6 +142,11 @@ class woodWall(tile):
             for i in range(len(qwey)): 
                 qwey[i] *= self.health/100
             self.colour = tuple(qwey)
+    def die(self):
+        for i in bullets:
+            if i.x == self.x and i.y == self.y:
+                bullets.remove(i)
+                tiles.remove(i)
 
 class woodHalfWall(tile):
     def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
@@ -158,6 +196,7 @@ class stoneWall(tile):
         super().__init__(X,Y,w,h,col,trans,remove)
         structures.append(self)
         solids.append(self)
+        walls.append(self)
         breakables.append(self)
         self.health = 200
         self.parent = parent
@@ -174,6 +213,11 @@ class stoneWall(tile):
             for i in range(len(qwey)): 
                 qwey[i] *= self.health/200
             self.colour = tuple(qwey)
+    def die(self):
+        for i in bullets:
+            if i.x == self.x and i.y == self.y:
+                bullets.remove(i)
+                tiles.remove(i)
 
 class stoneHalfWall(tile):
     def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
@@ -212,7 +256,7 @@ class stoneTrap(tile):
         if self.health <= 0:
             breakables.remove(self)
             tiles.remove(self)
-            solids.remove(self)
+            traps.remove(self)
             structures.remove(self)
             grasses.append(self.parent)
         else:
@@ -220,6 +264,12 @@ class stoneTrap(tile):
             for i in range(len(qwey)): 
                 qwey[i] *= self.health/150
             self.colour = tuple(qwey)
+    def hurt(self):
+        for i in zombies:
+            if i.x == self.x and i.y == self.y:
+                soundHit.play()
+                self.health -= 10
+                i.health -= 50
 
 class diamond(tile):
     def __init__(self,X,Y,w,h,col,trans,remove=False):
@@ -245,6 +295,7 @@ class diamondWall(tile):
         super().__init__(X,Y,w,h,col,trans,remove)
         structures.append(self)
         solids.append(self)
+        walls.append(self)
         breakables.append(self)
         self.health = 300
         self.parent = parent
@@ -261,6 +312,11 @@ class diamondWall(tile):
             for i in range(len(qwey)): 
                 qwey[i] *= self.health/300
             self.colour = tuple(qwey)
+    def die(self):
+        for i in bullets:
+            if i.x == self.x and i.y == self.y:
+                bullets.remove(i)
+                tiles.remove(i)
 
 class diamondHalfWall(tile):
     def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
@@ -299,7 +355,7 @@ class diamondTrap(tile):
         if self.health <= 0:
             breakables.remove(self)
             tiles.remove(self)
-            solids.remove(self)
+            traps.remove(self)
             structures.remove(self)
             grasses.append(self.parent)
         else:
@@ -307,18 +363,36 @@ class diamondTrap(tile):
             for i in range(len(qwey)): 
                 qwey[i] *= self.health/225
             self.colour = tuple(qwey)
+    def hurt(self):
+        for i in zombies:
+            if i.x == self.x and i.y == self.y:
+                soundHit.play()
+                self.health -= 10
+                i.health -= 80
 
 class player(tile):
     def __init__(self,X,Y,w,h,col,trans,remove=False):
         super().__init__(X,Y,w,h,col,trans,remove)
+        self.health = 100
+        self.ogcolour = col
         self.hitboxes = []
         self.breaking = False
         self.building = False
+        self.mcd = 0
+        self.dir = 'up'
     def move(self):
-        cd = str(counter/10)
-        if not ('.0' in cd and len(cd) == 3):
-            return
         keysPressed = key.get_pressed()
+        if (keysPressed[K_a]):
+            self.dir = 'left'
+        if (keysPressed[K_d]):
+            self.dir = 'right'
+        if (keysPressed[K_w]):
+            self.dir = 'up'
+        if (keysPressed[K_s]):
+            self.dir = 'down'
+        if self.mcd < 10:
+            return
+        self.mcd = 0
         global tiles
         if (keysPressed[K_a]):
             if not self.breaking and not self.building:
@@ -340,6 +414,7 @@ class player(tile):
                 for i in breakables:
                     collided = Rect.colliderect(i.surface.get_rect(topleft=(i.x,i.y)),leftBox) or collided
                     if collided:
+                        soundHit.play()
                         i.health -= 10
                         break
         if (keysPressed[K_d]):
@@ -362,6 +437,7 @@ class player(tile):
                 for i in breakables:
                     collided = Rect.colliderect(i.surface.get_rect(topleft=(i.x,i.y)),rightBox) or collided
                     if collided:
+                        soundHit.play()
                         i.health -= 10
                         break
         if (keysPressed[K_w]):
@@ -384,6 +460,7 @@ class player(tile):
                 for i in breakables:
                     collided = Rect.colliderect(i.surface.get_rect(topleft=(i.x,i.y)),upBox) or collided
                     if collided:
+                        soundHit.play()
                         i.health -= 10
                         break
         if (keysPressed[K_s]):
@@ -406,6 +483,7 @@ class player(tile):
                 for i in breakables:
                     collided = Rect.colliderect(i.surface.get_rect(topleft=(i.x,i.y)),downBox) or collided
                     if collided:
+                        soundHit.play()
                         i.health -= 10
                         break
     def destroy(self):
@@ -435,7 +513,7 @@ class player(tile):
         draw.rect(hey4,(255,0,0),Rect(0,0,pixel,pixel))
         hey4.set_alpha(170)
         window.blit(hey4,(pixel*4,pixel*5))
-    def create(self):
+    def create(self,ev):
         keysPressed = key.get_pressed()
         
         if (keysPressed[K_b]):
@@ -468,6 +546,23 @@ class player(tile):
             draw.rect(window,col1,inv1)
             draw.rect(window,col2,inv2)
             draw.rect(window,col3,inv3)
+
+            disp1 = Rect(pixel*8,pixel*8,pixel,pixel)
+
+            dangerLevel = (0,255,0)
+            if gamestate == 'danger':
+                dangerLevel = (255,0,0)
+            
+            draw.rect(window,dangerLevel,disp1)
+
+            leave = Rect(0,0,pixel,pixel)
+            draw.rect(window,(255,255,255),leave)
+
+            for e in ev:
+                if e.type == MOUSEBUTTONDOWN:
+                    x,y = mouse.get_pos()
+                    if (x > 0 and y > 0) and (x < (pixel) and y < (pixel)):
+                        gameOver()
             
             build1 = Rect(pixel*3,pixel*3,pixel,pixel)
             c1 = (0,0,0)
@@ -518,6 +613,7 @@ class player(tile):
                     if canplace:
                         struct = woodWall(pixel*4,pixel*3,pixel,pixel,c1,255,parentTile)
                         woodnum -= 2
+                        soundPlace.play()
                 elif (keysPressed[K_a]):
                     canplace = False
                     parentTile = None
@@ -529,6 +625,7 @@ class player(tile):
                     if canplace:
                         struct = woodWall(pixel*3,pixel*4,pixel,pixel,c1,255,parentTile)
                         woodnum -= 2
+                        soundPlace.play()
                 elif (keysPressed[K_d]):
                     canplace = False
                     parentTile = None
@@ -540,6 +637,7 @@ class player(tile):
                     if canplace:
                         struct = woodWall(pixel*5,pixel*4,pixel,pixel,c1,255,parentTile)
                         woodnum -= 2
+                        soundPlace.play()
                 elif (keysPressed[K_s]):
                     canplace = False
                     parentTile = None
@@ -551,6 +649,7 @@ class player(tile):
                     if canplace:
                         struct = woodWall(pixel*4,pixel*5,pixel,pixel,c1,255,parentTile)
                         woodnum -= 2
+                        soundPlace.play()
             elif (keysPressed[K_2]) and c2 != (0,0,0):
                 draw.rect(window,c2,build2)
                 draw.rect(window,c2,build4)
@@ -567,6 +666,7 @@ class player(tile):
                     if canplace:
                         struct = woodHalfWall(pixel*4,pixel*3,pixel,pixel,c2,255,parentTile)
                         woodnum -= 1
+                        soundPlace.play()
                 elif (keysPressed[K_a]):
                     canplace = False
                     parentTile = None
@@ -578,6 +678,7 @@ class player(tile):
                     if canplace:
                         struct = woodHalfWall(pixel*3,pixel*4,pixel,pixel,c2,255,parentTile)
                         woodnum -= 1
+                        soundPlace.play()
                 elif (keysPressed[K_d]):
                     canplace = False
                     parentTile = None
@@ -589,6 +690,7 @@ class player(tile):
                     if canplace:
                         struct = woodHalfWall(pixel*5,pixel*4,pixel,pixel,c2,255,parentTile)
                         woodnum -= 1
+                        soundPlace.play()
                 elif (keysPressed[K_s]):
                     canplace = False
                     parentTile = None
@@ -600,6 +702,7 @@ class player(tile):
                     if canplace:
                         struct = woodHalfWall(pixel*4,pixel*5,pixel,pixel,c2,255,parentTile)
                         woodnum -= 1
+                        soundPlace.play()
             elif (keysPressed[K_3]) and c3 != (0,0,0):
                 draw.rect(window,c3,build2)
                 draw.rect(window,c3,build4)
@@ -616,6 +719,7 @@ class player(tile):
                     if canplace:
                         struct = stoneWall(pixel*4,pixel*3,pixel,pixel,c3,255,parentTile)
                         stonenum -= 2
+                        soundPlace.play()
                 elif (keysPressed[K_a]):
                     canplace = False
                     parentTile = None
@@ -627,6 +731,7 @@ class player(tile):
                     if canplace:
                         struct = stoneWall(pixel*3,pixel*4,pixel,pixel,c3,255,parentTile)
                         stonenum -= 2
+                        soundPlace.play()
                 elif (keysPressed[K_d]):
                     canplace = False
                     parentTile = None
@@ -638,6 +743,7 @@ class player(tile):
                     if canplace:
                         struct = stoneWall(pixel*5,pixel*4,pixel,pixel,c3,255,parentTile)
                         stonenum -= 2
+                        soundPlace.play()
                 elif (keysPressed[K_s]):
                     canplace = False
                     parentTile = None
@@ -649,6 +755,7 @@ class player(tile):
                     if canplace:
                         struct = stoneWall(pixel*4,pixel*5,pixel,pixel,c3,255,parentTile)
                         stonenum -= 2
+                        soundPlace.play()
             elif (keysPressed[K_4]) and c4 != (0,0,0):
                 draw.rect(window,c4,build2)
                 draw.rect(window,c4,build4)
@@ -665,6 +772,7 @@ class player(tile):
                     if canplace:
                         struct = stoneHalfWall(pixel*4,pixel*3,pixel,pixel,c4,255,parentTile)
                         stonenum -= 1
+                        soundPlace.play()
                 elif (keysPressed[K_a]):
                     canplace = False
                     parentTile = None
@@ -676,6 +784,7 @@ class player(tile):
                     if canplace:
                         struct = stoneHalfWall(pixel*3,pixel*4,pixel,pixel,c4,255,parentTile)
                         stonenum -= 1
+                        soundPlace.play()
                 elif (keysPressed[K_d]):
                     canplace = False
                     parentTile = None
@@ -687,6 +796,7 @@ class player(tile):
                     if canplace:
                         struct = stoneHalfWall(pixel*5,pixel*4,pixel,pixel,c4,255,parentTile)
                         stonenum -= 1
+                        soundPlace.play()
                 elif (keysPressed[K_s]):
                     canplace = False
                     parentTile = None
@@ -698,6 +808,7 @@ class player(tile):
                     if canplace:
                         struct = stoneHalfWall(pixel*4,pixel*5,pixel,pixel,c4,255,parentTile)
                         stonenum -= 1
+                        soundPlace.play()
             elif (keysPressed[K_5]) and c5 != (0,0,0):
                 draw.rect(window,c5,build2)
                 draw.rect(window,c5,build4)
@@ -714,6 +825,7 @@ class player(tile):
                     if canplace:
                         struct = diamondWall(pixel*4,pixel*3,pixel,pixel,c5,255,parentTile)
                         diamondnum -= 2
+                        soundPlace.play()
                 elif (keysPressed[K_a]):
                     canplace = False
                     parentTile = None
@@ -725,6 +837,7 @@ class player(tile):
                     if canplace:
                         struct = diamondWall(pixel*3,pixel*4,pixel,pixel,c5,255,parentTile)
                         diamondnum -= 2
+                        soundPlace.play()
                 elif (keysPressed[K_d]):
                     canplace = False
                     parentTile = None
@@ -736,6 +849,7 @@ class player(tile):
                     if canplace:
                         struct = diamondWall(pixel*5,pixel*4,pixel,pixel,c5,255,parentTile)
                         diamondnum -= 2
+                        soundPlace.play()
                 elif (keysPressed[K_s]):
                     canplace = False
                     parentTile = None
@@ -747,6 +861,7 @@ class player(tile):
                     if canplace:
                         struct = diamondWall(pixel*4,pixel*5,pixel,pixel,c5,255,parentTile)
                         diamondnum -= 2
+                        soundPlace.play()
             elif (keysPressed[K_6]) and c6 != (0,0,0):
                 draw.rect(window,c6,build2)
                 draw.rect(window,c6,build4)
@@ -763,6 +878,7 @@ class player(tile):
                     if canplace:
                         struct = diamondHalfWall(pixel*4,pixel*3,pixel,pixel,c6,255,parentTile)
                         diamondnum -= 1
+                        soundPlace.play()
                 elif (keysPressed[K_a]):
                     canplace = False
                     parentTile = None
@@ -774,6 +890,7 @@ class player(tile):
                     if canplace:
                         struct = diamondHalfWall(pixel*3,pixel*4,pixel,pixel,c6,255,parentTile)
                         diamondnum -= 1
+                        soundPlace.play()
                 elif (keysPressed[K_d]):
                     canplace = False
                     parentTile = None
@@ -785,6 +902,7 @@ class player(tile):
                     if canplace:
                         struct = diamondHalfWall(pixel*5,pixel*4,pixel,pixel,c6,255,parentTile)
                         diamondnum -= 1
+                        soundPlace.play()
                 elif (keysPressed[K_s]):
                     canplace = False
                     parentTile = None
@@ -796,6 +914,7 @@ class player(tile):
                     if canplace:
                         struct = diamondHalfWall(pixel*4,pixel*5,pixel,pixel,c6,255,parentTile)
                         diamondnum -= 1
+                        soundPlace.play()
             elif (keysPressed[K_7]) and c7 != (0,0,0):
                 draw.rect(window,c7,build2)
                 draw.rect(window,c7,build4)
@@ -812,6 +931,7 @@ class player(tile):
                     if canplace:
                         struct = stoneTrap(pixel*4,pixel*3,pixel,pixel,c7,255,parentTile)
                         stonenum -= 3
+                        soundPlace.play()
                 elif (keysPressed[K_a]):
                     canplace = False
                     parentTile = None
@@ -823,6 +943,7 @@ class player(tile):
                     if canplace:
                         struct = stoneTrap(pixel*3,pixel*4,pixel,pixel,c7,255,parentTile)
                         stonenum -= 3
+                        soundPlace.play()
                 elif (keysPressed[K_d]):
                     canplace = False
                     parentTile = None
@@ -834,6 +955,7 @@ class player(tile):
                     if canplace:
                         struct = stoneTrap(pixel*5,pixel*4,pixel,pixel,c7,255,parentTile)
                         stonenum -= 3
+                        soundPlace.play()
                 elif (keysPressed[K_s]):
                     canplace = False
                     parentTile = None
@@ -845,6 +967,7 @@ class player(tile):
                     if canplace:
                         struct = stoneTrap(pixel*4,pixel*5,pixel,pixel,c7,255,parentTile)
                         stonenum -= 3
+                        soundPlace.play()
             elif (keysPressed[K_8]) and c8 != (0,0,0):
                 draw.rect(window,c8,build2)
                 draw.rect(window,c8,build4)
@@ -861,6 +984,7 @@ class player(tile):
                     if canplace:
                         struct = diamondTrap(pixel*4,pixel*3,pixel,pixel,c8,255,parentTile)
                         diamondnum -= 3
+                        soundPlace.play()
                 elif (keysPressed[K_a]):
                     canplace = False
                     parentTile = None
@@ -872,6 +996,7 @@ class player(tile):
                     if canplace:
                         struct = diamondTrap(pixel*3,pixel*4,pixel,pixel,c8,255,parentTile)
                         diamondnum -= 3
+                        soundPlace.play()
                 elif (keysPressed[K_d]):
                     canplace = False
                     parentTile = None
@@ -883,6 +1008,7 @@ class player(tile):
                     if canplace:
                         struct = diamondTrap(pixel*5,pixel*4,pixel,pixel,c8,255,parentTile)
                         diamondnum -= 3
+                        soundPlace.play()
                 elif (keysPressed[K_s]):
                     canplace = False
                     parentTile = None
@@ -894,6 +1020,7 @@ class player(tile):
                     if canplace:
                         struct = diamondTrap(pixel*4,pixel*5,pixel,pixel,c8,255,parentTile)
                         diamondnum -= 3
+                        soundPlace.play()
             else:
                 draw.rect(window,c1,build1)
                 draw.rect(window,c2,build2)
@@ -905,10 +1032,179 @@ class player(tile):
                 draw.rect(window,c8,build8)
         else:
             self.building = False
+    def shoot(self):
+        if self.mcd < 10:
+            return
+        keysPressed = key.get_pressed()
+        if (keysPressed[K_SPACE]):
+            soundShoot.play()
+            bul = bullet(self.x,self.y,pixel,pixel,(255,255,0),255,self)
+    def displayHealth(self):
+        if self.health <= 0:
+            gameOver()
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/100
+            self.colour = tuple(qwey)
     def showHitboxes(self):
         for i in self.hitboxes:
             draw.rect(window,(255,0,0),i)
-            
+    def cooldowns(self):
+        self.mcd += 1
+
+class bullet(tile):
+    def __init__(self,X,Y,w,h,col,trans,parent,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        self.orientation = parent.dir
+        bullets.append(self)
+    def move(self):
+        if self.orientation == 'up':
+            self.y -= pixel
+        elif self.orientation == 'down':
+            self.y += pixel
+        elif self.orientation == 'left':
+            self.x -= pixel
+        elif self.orientation == 'right':
+            self.x += pixel
+        if self.x < 0 or self.x > 1000 or self.y < 0 or self.y > 1000:
+            bullets.remove(self)
+            tiles.remove(self)
+
+class zombie(tile):
+    def __init__(self,X,Y,w,h,col,trans,remove=False):
+        super().__init__(X,Y,w,h,col,trans,remove)
+        self.health = 100
+        self.ogcolour = col
+        zombies.append(self)
+        solids.append(self)
+        self.mcd = 0
+        self.hitboxes = []
+    def move(self,target):
+        if self.mcd < 60:
+            return
+        self.mcd = 0
+        solidical = zombies + [target] + structures
+        for i in traps:
+            solidical.remove(i)
+        if self.x > target.x:
+            collided = False
+            leftBox = Rect((self.x+30)-(pixel/2),(self.y+30),30,30)
+            self.hitboxes.append(leftBox)
+            #self.showHitboxes()
+            self.hitboxes.remove(leftBox)
+            collidedWith = None
+            for i in solidical:
+                if i == self:
+                    continue
+                collided = Rect.colliderect(i.surface.get_rect(topleft=(i.x,i.y)),leftBox) or collided
+                if collided:
+                    collidedWith = i
+                    break
+            if not collided:
+                self.x -= pixel
+            elif not collidedWith in zombies:
+                try:
+                    collidedWith.health -= 10
+                    soundHit.play()
+                    if collidedWith in walls:
+                        self.health -= 20
+                except:
+                    pass
+        if self.x < target.x:
+            collided = False
+            rightBox = Rect((self.x+30)+(pixel/2),(self.y+30),30,30)
+            self.hitboxes.append(rightBox)
+            #self.showHitboxes()
+            self.hitboxes.remove(rightBox)
+            collidedWith = None
+            for i in solidical:
+                if i == self:
+                    continue
+                collided = Rect.colliderect(i.surface.get_rect(topleft=(i.x,i.y)),rightBox) or collided
+                if collided:
+                    collidedWith = i
+                    break
+            if not collided:
+                self.x += pixel
+            elif not collidedWith in zombies:
+                try:
+                    collidedWith.health -= 10
+                    soundHit.play()
+                    if collidedWith in walls:
+                        self.health -= 20
+                except:
+                    pass
+        if self.y > target.y:
+            collided = False
+            upBox = Rect((self.x+30),(self.y+30)-(pixel/2),30,30)
+            self.hitboxes.append(upBox)
+            #self.showHitboxes()
+            self.hitboxes.remove(upBox)
+            collidedWith = None
+            for i in solidical:
+                if i == self:
+                    continue
+                collided = Rect.colliderect(i.surface.get_rect(topleft=(i.x,i.y)),upBox) or collided
+                if collided:
+                    collidedWith = i
+                    break
+            if not collided:
+                self.y -= pixel
+            elif not collidedWith in zombies:
+                try:
+                    collidedWith.health -= 10
+                    soundHit.play()
+                    if collidedWith in walls:
+                        self.health -= 20
+                except:
+                    pass
+        if self.y < target.y:
+            collided = False
+            downBox = Rect((self.x+30),(self.y+30)+(pixel/2),30,30)
+            self.hitboxes.append(downBox)
+            #self.showHitboxes()
+            self.hitboxes.remove(downBox)
+            collidedWith = None
+            for i in solidical:
+                if i == self:
+                    continue
+                collided = Rect.colliderect(i.surface.get_rect(topleft=(i.x,i.y)),downBox) or collided
+                if collided:
+                    collidedWith = i
+                    break
+            if not collided:
+                self.y += pixel
+            elif not collidedWith in zombies:
+                try:
+                    collidedWith.health -= 10
+                    soundHit.play()
+                    if collidedWith in walls:
+                        self.health -= 20
+                except:
+                    pass
+    def die(self):
+        for i in bullets:
+            if i.x == self.x and i.y == self.y:
+                bullets.remove(i)
+                tiles.remove(i)
+                self.health -= 10
+    def displayHealth(self):
+        if self.health <= 0:
+            zombies.remove(self)
+            tiles.remove(self)
+            solids.remove(self)
+        else:
+            qwey = list(self.ogcolour)
+            for i in range(len(qwey)): 
+                qwey[i] *= self.health/100
+            self.colour = tuple(qwey)
+    def cooldowns(self):
+        self.mcd += 1
+    def showHitboxes(self):
+        for i in self.hitboxes:
+            draw.rect(window,(0,0,255),i,2)
+        
 def decodeMatrix(matrix):
     tiles.clear()
     for i in range(len(matrix)-1):
@@ -1010,6 +1306,137 @@ def createPlayArea():
     decodeMatrix(matrix)
     clearMiddle()
 
+def startingTransition(speed):
+    global transitions
+    transitions.clear()
+    for i in range(9):
+        for j in range(9):
+            pix = tile(pixel*j,pixel*i,pixel,pixel,(0,0,0),255,True)
+            transitions.append(pix)
+            for v in transitions:
+                v.draw()
+            display.update()
+            wait(speed)
+def startingTransitionEnd(speed):
+    global transitions
+    for i in range(81):
+        for j in tiles:
+            j.draw()
+        player.draw()
+        for v in transitions:
+            v.draw()
+        display.update()
+        transitions.remove(transitions[0])
+        wait(speed/2)
+        
+def endingTransition(speed):
+    global transitions
+    transitions.clear()
+    for i in range(9):
+        for j in range(9):
+            pix = tile(pixel*j,pixel*i,pixel,pixel,(0,0,0),255,True)
+            transitions.append(pix)
+            player.draw()
+            for v in transitions:
+                v.draw()
+            display.update()
+            wait(speed)
+def endingTransitionEnd(speed):
+    global transitions
+    for i in range(81):
+        for j in tiles:
+            j.draw()
+        for v in transitions:
+            v.draw()
+        display.update()
+        transitions.remove(transitions[0])
+        wait(speed)
+
+def spawnZombie():
+    posx,posy = randint(-10,10)*100,randint(-10,10)*100
+    ran = randint(1,4)
+    if ran == 1:
+        posx = -1000
+    elif ran == 2:
+        posx = 1000
+    elif ran == 3:
+        posy = -1000
+    elif ran == 4:
+        posy = 1000
+    z = zombie(posx,posy,pixel,pixel,(255,0,0),255)
+
+def spawnZombies(amount):
+    for i in range(amount):
+        spawnZombie()
+
+def stepGameState():
+    global gametime
+    global gamestate
+    global wavelength
+    global rest
+    global intervals
+    global wave
+    gametime += 1
+    print(gametime)
+    if gametime // rest == 1:
+        if gamestate == 'resting':
+            gamestate = 'danger'
+            gametime = 0
+    if gametime // wavelength == 1:
+        if gamestate == 'danger':
+            gamestate = 'resting'
+            gametime = 0
+            wave += 1
+    if gamestate == 'danger':
+        intervals = 10
+        if gametime % intervals == 0:
+            spawnZombies(ceil(pow(wave,exp)/intervals))
+
+def gameOver():
+    global gametime
+    global woodnum
+    global stonenum
+    global diamondnum
+    global state
+    global wave
+    gametime = 0
+    tiles.clear()
+    solids.clear()
+    breakables.clear()
+    structures.clear()
+    shootable.clear()
+    grasses.clear()
+    traps.clear()
+    zombies.clear()
+    bullets.clear()
+    walls.clear()
+
+    transitions.clear()
+
+    woodnum = 0
+    stonenum = 0
+    diamondnum = 0
+
+    if wave > 1:
+        if difficulty == 'easy':
+            save['difficultiesUnlocked']['medium'] = True
+        if difficulty == 'medium':
+            save['difficultiesUnlocked']['hard'] = True
+        if difficulty == 'hard':
+            save['difficultiesUnlocked']['insane'] = True
+        if difficulty == 'insane':
+            save['difficultiesUnlocked']['impossible'] = True
+
+    saveData()
+    
+    endingTransition(0.005)
+    state = 'title'
+    decodeMatrix(titlescreen)
+    endingTransitionEnd(0.005)
+    player.health = 100
+
+    wave = 1
+    
 clock = time.Clock()
 FPS = 60
 
@@ -1031,15 +1458,32 @@ titlescreen = [
 difficulties = [
     [(),(),(),(),(),(),(),(),(),],
     [(),(),(),(0,255,0),(0,255,0),(0,255,0),(),(),(),],
-    [(),(),(),(),(),(),(),(),(),],
-    [(),(),(),(255,255,0),(255,255,0),(255,255,0),(),(),(),],
-    [(),(),(),(),(),(),(),(),(),],
-    [(),(),(),(255,0,0),(255,0,0),(255,0,0),(),(),(),],
-    [(),(),(),(),(),(),(),(),(),],
-    [(),(),(),(200,0,255),(200,0,255),(200,0,255),(),(),(),],
-    [(),(),(),(),(),(),(),(),(),],
-    'grey',
-    ]
+    [(),(),(),(),(),(),(),(),(),],]
+if save['difficultiesUnlocked']['medium']:
+    difficulties += [
+        [(),(),(),(255,255,0),(255,255,0),(255,255,0),(),(),(),],
+        [(),(),(),(),(),(),(),(),(),],]
+else:
+    difficulties += [
+        [(),(),(),(0,0,0),(0,0,0),(0,0,0),(),(),(),],
+        [(),(),(),(),(),(),(),(),(),],]
+if save['difficultiesUnlocked']['hard']:
+    difficulties += [
+        [(),(),(),(255,0,0),(255,0,0),(255,0,0),(),(),(),],
+        [(),(),(),(),(),(),(),(),(),],]
+else:
+    difficulties += [
+        [(),(),(),(0,0,0),(0,0,0),(0,0,0),(),(),(),],
+        [(),(),(),(),(),(),(),(),(),],]
+if save['difficultiesUnlocked']['insane']:
+    difficulties += [
+        [(),(),(),(200,0,255),(200,0,255),(200,0,255),(),(),(),],
+        [(),(),(),(),(),(),(),(),(),],
+        'grey',]
+else:
+    difficulties += [
+        [(),(),(),(0,0,0),(0,0,0),(0,0,0),(),(),(),],
+        [(),(),(),(),(),(),(),(),(),],'grey']
 
 decodeMatrix(titlescreen)
 
@@ -1048,7 +1492,10 @@ difficultyDisplay = tile(800,800,100,100,(0,255,0),255,True)
 while game:
     counter += 1
     window.fill((50,50,50))
-
+    if counter == 60 and state == 'playing':
+        stepGameState()
+        for i in traps:
+            i.hurt()
     ev = event.get()
 
     for i in breakables:
@@ -1058,13 +1505,34 @@ while game:
         i.draw()
 
     for i in structures:
+        if i in zombies:
+            continue
+        i.draw()   
+        try:
+            i.die()
+        except:
+            pass
+        
+    for i in bullets:
         i.draw()
+        if counter % 3 == 0:
+            i.move()
     
     if state == 'playing':
         player.destroy()
-        player.create()
+        player.create(ev)
+        player.shoot()
         player.move()
+        player.cooldowns()
+        player.displayHealth()
         player.draw()
+        for i in zombies:
+            i.die()
+            i.displayHealth()
+            i.move(player)
+            i.cooldowns()
+            i.showHitboxes()
+            i.draw()
     elif state == 'title':
         difficultyDisplay.draw()
     
@@ -1077,35 +1545,56 @@ while game:
             if e.type == MOUSEBUTTONDOWN:
                 x,y = mouse.get_pos()
                 if (x > (pixel)*3 and y > (pixel)*3) and (x < (pixel)*6 and y < (pixel)*4):
+                    soundPlay.play()
+                    startingTransition(0.005)
                     state = 'playing'
                     createPlayArea()
+                    startingTransitionEnd(0.005)
                 if (x > (pixel)*3 and y > (pixel)*5) and (x < (pixel)*6 and y < (pixel)*6):
                     decodeMatrix(difficulties)
                     state = 'difficulties'
+                    soundClick.play()
                 if (x > (pixel)*3 and y > (pixel)*7) and (x < (pixel)*6 and y < (pixel)*8):
+                    soundClick.play()
                     webbrowser.open('https://github.com/fijianfugufish/9Z/blob/main/how%20to%20play.md')
         elif state == 'difficulties':
             if e.type == MOUSEBUTTONDOWN:
                 x,y = mouse.get_pos()
-                if (x > (pixel)*3 and y > (pixel)) and (x < (pixel)*6 and y < (pixel)*2):
+                if save['difficultiesUnlocked']['easy'] and (x > (pixel)*3 and y > (pixel)) and (x < (pixel)*6 and y < (pixel)*2):
                     decodeMatrix(titlescreen)
                     state = 'title'
                     difficulty = 'easy'
+                    soundClick.play()
+                    rest = 60
+                    wavelength = 40
+                    exp = 1
                     difficultyDisplay.colour = (0,255,0)
-                if (x > (pixel)*3 and y > (pixel)*3) and (x < (pixel)*6 and y < (pixel)*4):
+                if save['difficultiesUnlocked']['medium'] and  (x > (pixel)*3 and y > (pixel)*3) and (x < (pixel)*6 and y < (pixel)*4):
                     decodeMatrix(titlescreen)
                     state = 'title'
                     difficulty = 'medium'
+                    soundClick.play()
+                    rest = 50
+                    wavelength = 40
+                    exp = 2
                     difficultyDisplay.colour = (255,255,0)
-                if (x > (pixel)*3 and y > (pixel)*5) and (x < (pixel)*6 and y < (pixel)*6):
+                if save['difficultiesUnlocked']['hard'] and  (x > (pixel)*3 and y > (pixel)*5) and (x < (pixel)*6 and y < (pixel)*6):
                     decodeMatrix(titlescreen)
                     state = 'title'
                     difficulty = 'hard'
+                    soundClick.play()
+                    rest = 40
+                    wavelength = 40
+                    exp = 3
                     difficultyDisplay.colour = (255,0,0)
-                if (x > (pixel)*3 and y > (pixel)*7) and (x < (pixel)*6 and y < (pixel)*8):
+                if save['difficultiesUnlocked']['insane'] and  (x > (pixel)*3 and y > (pixel)*7) and (x < (pixel)*6 and y < (pixel)*8):
                     decodeMatrix(titlescreen)
                     state = 'title'
                     difficulty = 'insane'
+                    soundClick.play()
+                    rest = 30
+                    wavelength = 40
+                    exp = 4
                     difficultyDisplay.colour = (200,0,255)
 
     clock.tick(FPS)
