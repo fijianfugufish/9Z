@@ -1417,7 +1417,7 @@ def gameOver():
     stonenum = 0
     diamondnum = 0
 
-    if wave > 1:
+    if wave > 9:
         if difficulty == 'easy':
             save['difficultiesUnlocked']['medium'] = True
         if difficulty == 'medium':
