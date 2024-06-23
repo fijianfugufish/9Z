@@ -19,8 +19,11 @@ because i made the controls pretty difficult
 - The red button selects the hard difficulty
 - The purple button selects the extreme difficulty
 
+Locked difficulties will appear black. To unlock them, beat 9 waves of on the previous difficulty, or hack the json file. (I don't care)
+
 ## easy controls
 - WASD to move
+- SPACE to shoot
 
 ## controls
 - Hold Q and a WASD direction to break a block
@@ -66,7 +69,7 @@ because i made the controls pretty difficult
   
 - Wooden Wall
   
-  This is a structure you can build with Wood. Has 100 health, costs 2 Wood. To build this structure, you must hold 1 while pressing B.
+  This is a structure you can build with Wood. Has 100 health, costs 2 Wood. To build this structure, you must hold 1 while pressing B. Damages enemies that damage it, like thorns.
   
 - Wooden Half Wall
   
@@ -74,7 +77,7 @@ because i made the controls pretty difficult
   
 - Stone Wall
   
-  This is a structure you can build with Stone. Has 200 health, costs 2 Stone. To build this structure, you must hold 3 while pressing B.
+  This is a structure you can build with Stone. Has 200 health, costs 2 Stone. To build this structure, you must hold 3 while pressing B. Damages enemies that damage it, like thorns.
   
 - Stone Half Wall
   
@@ -82,7 +85,7 @@ because i made the controls pretty difficult
   
 - Diamond Wall
   
-  This is a structure you can build with Diamond. Has 300 health, costs 2 Diamond. To build this structure, you must hold 5 while pressing B.
+  This is a structure you can build with Diamond. Has 300 health, costs 2 Diamond. To build this structure, you must hold 5 while pressing B. Damages enemies that damage it, like thorns.
   
 - Diamond Half Wall
   
@@ -95,3 +98,13 @@ because i made the controls pretty difficult
 - Diamond Trap
   
   This is a structure you can build with Diamond. Has 225 health, costs 3 Diamond. Damages ememies above it. This block is not solid. To build this structure, you must hold 8 while pressing B.
+
+- Bullet
+
+  Yellow blocks that are shot out of the player when SPACE is pressed. Deals 10 to enemies, collides with your walls.
+
+- Zombie
+
+  Red blocks that follow and attack the player. They will break anything in their way. Shoot them, or use structures to kill them. They can climb mountains and swim in water.
+
+**BLOCKS DISPLAY THEIR DURABILITY WITH BRIGHTNESS**
