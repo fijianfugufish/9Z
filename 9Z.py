@@ -34,11 +34,17 @@ gamestate = 'resting'
 game = True
 
 mixer.init()
-soundClick = mixer.Sound('sounds/click.wav')
-soundPlay = mixer.Sound('sounds/play.wav')
-soundHit = mixer.Sound('sounds/hit.wav')
-soundPlace = mixer.Sound('sounds/place.wav')
-soundShoot = mixer.Sound('sounds/shoot.wav')
+soundClick = mixer.Sound('sounds/sfx/click.wav')
+soundPlay = mixer.Sound('sounds/sfx/play.wav')
+soundHit = mixer.Sound('sounds/sfx/hit.wav')
+soundPlace = mixer.Sound('sounds/sfx/place.wav')
+soundShoot = mixer.Sound('sounds/sfx/shoot.wav')
+soundDie = mixer.Sound('sounds/sfx/die.wav')
+
+mixer.set_num_channels(2)
+musicTitleScreen = mixer.Sound('sounds/music/titleScreen.wav')
+musicMainGame = mixer.Sound('sounds/music/mainGame.wav')
+mixer.Channel(1).play(musicTitleScreen,-1,fade_ms=1000)
 
 window = display.set_mode((winx,winy))
 display.set_caption('9Z')
@@ -55,6 +61,10 @@ bullets = []
 walls = []
 
 transitions = list()
+
+transitions2 = list()
+t2trans1 = 0
+t2trans2 = 0
 
 woodnum = 0
 stonenum = 0
@@ -1189,6 +1199,7 @@ class zombie(tile):
                 bullets.remove(i)
                 tiles.remove(i)
                 self.health -= 10
+                soundHit.play()
     def displayHealth(self):
         if self.health <= 0:
             zombies.remove(self)
@@ -1302,13 +1313,14 @@ def createPlayArea():
     stuff = (sizey * sizex)//100
     generateWater(matrix,stuff,stuff//2)
     generateResources(matrix,stuff*10)
-
+    
     decodeMatrix(matrix)
     clearMiddle()
 
 def startingTransition(speed):
     global transitions
     transitions.clear()
+    player.displayHealth()
     for i in range(9):
         for j in range(9):
             pix = tile(pixel*j,pixel*i,pixel,pixel,(0,0,0),255,True)
@@ -1350,7 +1362,40 @@ def endingTransitionEnd(speed):
             v.draw()
         display.update()
         transitions.remove(transitions[0])
-        wait(speed)
+        wait(speed/2)
+
+def waveStart(const):
+    global waveStartTransition
+    global t2trans1
+    if t2trans1 <= 0:
+        t2trans1 = 0
+        return
+    for i in range(len(waveStartTransition)):
+        for j in range(len(waveStartTransition[i])):
+            if waveStartTransition[i][j] == None:
+                continue
+            pix = tile(pixel*j,pixel*i,pixel,pixel,waveStartTransition[i][j],t2trans1,True)
+            transitions2.append(pix)
+    for i in transitions2:
+        i.draw()
+    t2trans1 -= const
+    transitions2.clear()
+def waveEnd(const):
+    global waveEndTransition
+    global t2trans2
+    if t2trans2 <= 0:
+        t2trans2 = 0
+        return
+    for i in range(len(waveStartTransition)):
+        for j in range(len(waveStartTransition[i])):
+            if waveStartTransition[i][j] == None:
+                continue
+            pix = tile(pixel*j,pixel*i,pixel,pixel,waveEndTransition[i][j],t2trans2,True)
+            transitions2.append(pix)
+    for i in transitions2:
+        i.draw()
+    t2trans2 -= const
+    transitions2.clear()
 
 def spawnZombie():
     posx,posy = randint(-10,10)*100,randint(-10,10)*100
@@ -1376,20 +1421,24 @@ def stepGameState():
     global rest
     global intervals
     global wave
+    global t2trans1
+    global t2trans2
     gametime += 1
     print(gametime)
     if gametime // rest == 1:
         if gamestate == 'resting':
             gamestate = 'danger'
+            t2trans1 = 255
             gametime = 0
     if gametime // wavelength == 1:
         if gamestate == 'danger':
             gamestate = 'resting'
+            t2trans2 = 255
             gametime = 0
             wave += 1
     if gamestate == 'danger':
-        intervals = 10
-        if gametime % intervals == 0:
+        intervals = 11
+        if gametime % intervals == 0 and gametime < 33:
             spawnZombies(ceil(pow(wave,exp)/intervals))
 
 def gameOver():
@@ -1399,6 +1448,10 @@ def gameOver():
     global diamondnum
     global state
     global wave
+    global difficulties
+
+    mixer.Channel(1).fadeout(250)
+    
     gametime = 0
     tiles.clear()
     solids.clear()
@@ -1428,11 +1481,44 @@ def gameOver():
             save['difficultiesUnlocked']['impossible'] = True
 
     saveData()
+
+    difficulties = [
+        [(),(),(),(),(),(),(),(),(),],
+        [(),(),(),(0,255,0),(0,255,0),(0,255,0),(),(),(),],
+        [(),(),(),(),(),(),(),(),(),],]
+    if save['difficultiesUnlocked']['medium']:
+        difficulties += [
+            [(),(),(),(255,255,0),(255,255,0),(255,255,0),(),(),(),],
+            [(),(),(),(),(),(),(),(),(),],]
+    else:
+        difficulties += [
+            [(),(),(),(0,0,0),(0,0,0),(0,0,0),(),(),(),],
+            [(),(),(),(),(),(),(),(),(),],]
+    if save['difficultiesUnlocked']['hard']:
+        difficulties += [
+            [(),(),(),(255,0,0),(255,0,0),(255,0,0),(),(),(),],
+            [(),(),(),(),(),(),(),(),(),],]
+    else:
+        difficulties += [
+            [(),(),(),(0,0,0),(0,0,0),(0,0,0),(),(),(),],
+            [(),(),(),(),(),(),(),(),(),],]
+    if save['difficultiesUnlocked']['insane']:
+        difficulties += [
+            [(),(),(),(200,0,255),(200,0,255),(200,0,255),(),(),(),],
+            [(),(),(),(),(),(),(),(),(),],
+            'grey',]
+    else:
+        difficulties += [
+            [(),(),(),(0,0,0),(0,0,0),(0,0,0),(),(),(),],
+            [(),(),(),(),(),(),(),(),(),],'grey']
+
+    soundDie.play()
     
     endingTransition(0.005)
     state = 'title'
     decodeMatrix(titlescreen)
     endingTransitionEnd(0.005)
+    mixer.Channel(1).play(musicTitleScreen,-1,fade_ms=1000)
     player.health = 100
 
     wave = 1
@@ -1441,6 +1527,30 @@ clock = time.Clock()
 FPS = 60
 
 player = player(pixel*4,pixel*4,pixel,pixel,(225,225,190),255,True)
+
+waveEndTransition = [
+    [(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),],
+    [(0,255,0),None,None,None,None,None,None,None,(0,255,0),],
+    [(0,255,0),None,None,None,None,None,None,None,(0,255,0),],
+    [(0,255,0),None,None,None,None,None,None,None,(0,255,0),],
+    [(0,255,0),None,None,None,None,None,None,None,(0,255,0),],
+    [(0,255,0),None,None,None,None,None,None,None,(0,255,0),],
+    [(0,255,0),None,None,None,None,None,None,None,(0,255,0),],
+    [(0,255,0),None,None,None,None,None,None,None,(0,255,0),],
+    [(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),(0,255,0),],
+    ]
+
+waveStartTransition = [
+    [(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),],
+    [(255,0,0),None,None,None,None,None,None,None,(255,0,0),],
+    [(255,0,0),None,None,None,None,None,None,None,(255,0,0),],
+    [(255,0,0),None,None,None,None,None,None,None,(255,0,0),],
+    [(255,0,0),None,None,None,None,None,None,None,(255,0,0),],
+    [(255,0,0),None,None,None,None,None,None,None,(255,0,0),],
+    [(255,0,0),None,None,None,None,None,None,None,(255,0,0),],
+    [(255,0,0),None,None,None,None,None,None,None,(255,0,0),],
+    [(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),(255,0,0),],
+    ]
 
 titlescreen = [
     [(0,0,0),(0,0,0),(100,100,100),(100,100,100),(0,0,0),(0,0,0),(100,100,100),(100,100,100),(0,0,0),],
@@ -1535,6 +1645,9 @@ while game:
             i.draw()
     elif state == 'title':
         difficultyDisplay.draw()
+
+    waveStart(5)
+    waveEnd(5)
     
     display.update()
 
@@ -1546,10 +1659,12 @@ while game:
                 x,y = mouse.get_pos()
                 if (x > (pixel)*3 and y > (pixel)*3) and (x < (pixel)*6 and y < (pixel)*4):
                     soundPlay.play()
+                    mixer.Channel(1).fadeout(250)
                     startingTransition(0.005)
                     state = 'playing'
                     createPlayArea()
                     startingTransitionEnd(0.005)
+                    mixer.Channel(1).play(musicMainGame,-1,fade_ms=1000)
                 if (x > (pixel)*3 and y > (pixel)*5) and (x < (pixel)*6 and y < (pixel)*6):
                     decodeMatrix(difficulties)
                     state = 'difficulties'
