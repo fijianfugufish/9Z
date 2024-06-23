@@ -34,13 +34,17 @@ Locked difficulties will appear black. To unlock them, beat 9 waves of on the pr
 
 - Hold B, a number 1 - 8 and a WASD direction to place a block (I'll give examples)
 
-  <img width="890" alt="Screenshot 2024-06-16 at 17 02 30" src="https://github.com/fijianfugufish/9Z/assets/166637966/176583cc-907b-457a-800a-999f609c2e57">
+  <img width="895" alt="Screenshot 2024-06-23 at 14 51 40" src="https://github.com/fijianfugufish/9Z/assets/166637966/ead2b633-5f96-4947-b8a1-df740899f11b">
   
   The blocks around you are the ones you can build. If they are black, you do not have the sufficient materials required to build them.
   
   The three blocks at the bottom left are to display the amount of materials you are currently carrying. It displays this with brightness. Black being none, and brighter being more. The colour of the inventory blocks corresponds to the certain mineral you are carrying.
 
   Hold a number 1 - 8 and use WASD, while holding B, to build a certain block. (I'm sorry)
+
+  The bottom right block is either green or red. This displays the danger level - green is safe, red is dangerous. The border of the screen will sometimes flash. This displays when a wave starts or ends - green is the wave ending, red is the wave starting.
+
+  Click the white square in the top left to exit the game.
 
 ## blocks
 - Mountain
