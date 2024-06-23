@@ -1,5 +1,5 @@
-i havent written this yet
-(instructions not fully made)
-zip: [9Z.zip](https://github.com/user-attachments/files/15937377/9Z.zip)
-
-
+# 9Z
+-----------------------------------------------------------------------------------------------------
+i dont know what to write
+its a 9x9 pixel zombie survival game
+zip: [9Z.zip](https://github.com/user-attachments/files/15944436/9Z.zip)
