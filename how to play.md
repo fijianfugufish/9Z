@@ -45,6 +45,10 @@ Locked difficulties will appear black. To unlock them, beat 9 waves of on the pr
   The bottom right block is either green or red. This displays the danger level - green is safe, red is dangerous. The border of the screen will sometimes flash. This displays when a wave starts or ends - green is the wave ending, red is the wave starting.
 
   Click the white square in the top left to exit the game.
+  
+## other
+
+- When you die, the amount of green pixels will display the waves you beat.
 
 ## blocks
 - Mountain
