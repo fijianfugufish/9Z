@@ -41,10 +41,10 @@ soundPlace = mixer.Sound('sounds/sfx/place.wav')
 soundShoot = mixer.Sound('sounds/sfx/shoot.wav')
 soundDie = mixer.Sound('sounds/sfx/die.wav')
 
-mixer.set_num_channels(2)
+mixer.set_num_channels(8)
 musicTitleScreen = mixer.Sound('sounds/music/titleScreen.wav')
 musicMainGame = mixer.Sound('sounds/music/mainGame.wav')
-mixer.Channel(1).play(musicTitleScreen,-1,fade_ms=1000)
+mixer.Channel(7).play(musicTitleScreen,-1,fade_ms=1000)
 
 window = display.set_mode((winx,winy))
 display.set_caption('9Z')
@@ -1051,6 +1051,7 @@ class player(tile):
             bul = bullet(self.x,self.y,pixel,pixel,(255,255,0),255,self)
     def displayHealth(self):
         if self.health <= 0:
+            soundDie.play()
             gameOver()
         else:
             qwey = list(self.ogcolour)
@@ -1344,9 +1345,14 @@ def startingTransitionEnd(speed):
 def endingTransition(speed):
     global transitions
     transitions.clear()
+    w = wave
     for i in range(9):
         for j in range(9):
-            pix = tile(pixel*j,pixel*i,pixel,pixel,(0,0,0),255,True)
+            col = (255,100,100)
+            if w > 0:
+                col = (100,255,100)
+            pix = tile(pixel*j,pixel*i,pixel,pixel,col,255,True)
+            w -= 1
             transitions.append(pix)
             player.draw()
             for v in transitions:
@@ -1450,7 +1456,7 @@ def gameOver():
     global wave
     global difficulties
 
-    mixer.Channel(1).fadeout(250)
+    mixer.Channel(7).fadeout(250)
     
     gametime = 0
     tiles.clear()
@@ -1517,8 +1523,9 @@ def gameOver():
     endingTransition(0.005)
     state = 'title'
     decodeMatrix(titlescreen)
+    wait(1)
     endingTransitionEnd(0.005)
-    mixer.Channel(1).play(musicTitleScreen,-1,fade_ms=1000)
+    mixer.Channel(7).play(musicTitleScreen,-1,fade_ms=1000)
     player.health = 100
 
     wave = 1
@@ -1659,12 +1666,12 @@ while game:
                 x,y = mouse.get_pos()
                 if (x > (pixel)*3 and y > (pixel)*3) and (x < (pixel)*6 and y < (pixel)*4):
                     soundPlay.play()
-                    mixer.Channel(1).fadeout(250)
+                    mixer.Channel(7).fadeout(250)
                     startingTransition(0.005)
                     state = 'playing'
                     createPlayArea()
+                    mixer.Channel(7).play(musicMainGame,-1,fade_ms=1000)
                     startingTransitionEnd(0.005)
-                    mixer.Channel(1).play(musicMainGame,-1,fade_ms=1000)
                 if (x > (pixel)*3 and y > (pixel)*5) and (x < (pixel)*6 and y < (pixel)*6):
                     decodeMatrix(difficulties)
                     state = 'difficulties'
