@@ -1,5 +1,5 @@
 # 9Z
-VERSION 1.0
+VERSION 1.0.0
 
 -----------------------------------------------------------------------------------------------------
 i dont know what to write
@@ -12,4 +12,4 @@ required to run:
 - pygame
 - numpy
 
-zip: [9Z.zip](https://github.com/user-attachments/files/15972828/9Z.zip)
+zip: [9Z.zip](https://github.com/user-attachments/files/15973007/9Z.zip)
